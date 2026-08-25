@@ -89,7 +89,7 @@ Projects may begin as simple experiments and gradually become more structured as
 
 Progress
 
-This section will be updated as the journey.
+This section will be updated as the journey continues.
 
 Long-Term Direction
 
