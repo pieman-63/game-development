@@ -41,7 +41,7 @@ class Character:
 class Player(Character):
     """The player character."""
 
-    STAT_POOL = 20
+    STAT_POOL = 25
 
     # Luck remains useful, but no longer becomes overwhelmingly strong.
     CRIT_CHANCE_PER_LUCK = 0.025
