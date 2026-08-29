@@ -1,34 +1,3 @@
-        self.exp = 0
-        self.exp_to_next_level =0
-        self.hp = self.max_hp
-
-        self.inventory: dict[str, iself.luck * self.CRIT_CHANCE_PER_LUCK,
-        )
-
-    @property
-    def stat_growth_cap(self) -> int:
-        """Maximum value obtainable through enemy stat growth."""
-        return max(1, (self.level * 5) - 3)
-
-    def gain_exp(self, amount: int) -> None:
-        """Gain EXP, including the Luck-based EXP bonus."""
-        exp_bonus = int(amount * (self.luck * 0.01))
-        tota
-        print(f"\nYou gained {total_e            self.exp -= self.exp_to_next_level
-            self.level_up()
-
-    def level_up(self) -> None:
-    
-        self.exp_to_next_level = int(self.exp_to_next_level * 1.25)
-        self.hp = self.max_hp
-
-        print("All stats increased by 1!")
-        print("Your HP has been fully restored.")
-
-    def stat_growth_from_enemy(self, enemy: Enemy) -> None:
-        """Increase a matching stat when an enemy has a higher major stat."""at_name = enemy.major_stat
-        enemy_value = getattr(enemy, stat_name)
-        player_value = getattr(self, stat_name)
 from __future__ import annotations
 
 import random
@@ -44,8 +13,10 @@ class Player(Character):
     """The player character."""
 
     STAT_POOL = 25
+
     CRIT_CHANCE_PER_LUCK = 0.025
     MAX_CRIT_CHANCE = 0.50
+
     STARTING_POTIONS = 3
 
     def __init__(
@@ -58,7 +29,12 @@ class Player(Character):
         luck: int,
     ) -> None:
         super().__init__(
-            name, strength, defense, agility, intelligence, luck
+            name,
+            strength,
+            defense,
+            agility,
+            intelligence,
+            luck,
         )
 
         self.level = 1
@@ -79,19 +55,31 @@ class Player(Character):
 
     @property
     def stat_growth_cap(self) -> int:
-        """Maximum value obtainable through enemy stat growth."""
+        """
+        Maximum stat value for stat growth from enemies.
+        """
         return max(1, (self.level * 5) - 3)
 
     def gain_exp(self, amount: int) -> None:
-        """Gain EXP, including the Luck-based EXP bonus."""
+        """
+        Gain EXP.
+
+        Luck gives the player a small EXP bonus
+        per point of Luck.
+        """
+
         exp_bonus = int(amount * (self.luck * 0.01))
         total_exp = amount + exp_bonus
+
         self.exp += total_exp
 
         print(f"\nYou gained {total_exp} EXP!")
 
         if exp_bonus > 0:
-            print(f"Luck bonus: +{exp_bonus} EXP ({self.luck} Luck)")
+            print(
+                f"Luck bonus: +{exp_bonus} EXP "
+                f"({self.luck} Luck)"
+            )
 
         while self.exp >= self.exp_to_next_level:
             self.exp -= self.exp_to_next_level
@@ -110,15 +98,23 @@ class Player(Character):
         self.intelligence += 1
         self.luck += 1
 
-        self.exp_to_next_level = int(self.exp_to_next_level * 1.25)
+        self.exp_to_next_level = int(
+            self.exp_to_next_level * 1.25
+        )
+
         self.hp = self.max_hp
 
         print("All stats increased by 1!")
         print("Your HP has been fully restored.")
 
     def stat_growth_from_enemy(self, enemy: Enemy) -> None:
-        """Increase a matching stat when an enemy has a higher major stat."""
+        """
+        Increase a stat when an enemy has a higher
+        corresponding major stat.
+        """
+
         stat_name = enemy.major_stat
+
         enemy_value = getattr(enemy, stat_name)
         player_value = getattr(self, stat_name)
 
@@ -127,34 +123,52 @@ class Player(Character):
 
         if player_value >= self.stat_growth_cap:
             print(
-                f"\nYour {stat_name} is already at its current "
-                f"growth cap ({self.stat_growth_cap})."
+                f"\nYour {stat_name} is already at "
+                f"its current growth cap "
+                f"({self.stat_growth_cap})."
             )
             return
 
-        new_value = min(player_value + 1, self.stat_growth_cap)
+        new_value = min(
+            player_value + 1,
+            self.stat_growth_cap,
+        )
+
         setattr(self, stat_name, new_value)
 
-        print(f"\nEnemy's major stat was {stat_name.upper()}!")
+        print(
+            f"\nEnemy's major stat was "
+            f"{stat_name.upper()}!"
+        )
+
         print(
             f"Your {stat_name} increased "
             f"from {player_value} to {new_value}!"
         )
 
     def take_damage(self, damage: float) -> None:
-        self.hp = max(0, self.hp - damage)
+        self.hp -= damage
+
+        if self.hp < 0:
+            self.hp = 0
 
         print(f"You took {damage:.1f} damage!")
         print(f"HP: {self.hp:.1f}/{self.max_hp}")
 
     def heal(self, amount: float) -> bool:
-        """Heal the player. Return True when HP actually increased."""
+        """Heal the player. Returns True if healing occurred."""
+
         if self.hp >= self.max_hp:
             print("Your HP is already full!")
             return False
 
         old_hp = self.hp
-        self.hp = min(self.max_hp, self.hp + amount)
+
+        self.hp += amount
+
+        if self.hp > self.max_hp:
+            self.hp = self.max_hp
+
         actual_healing = self.hp - old_hp
 
         print(f"You recovered {actual_healing:.1f} HP.")
@@ -163,7 +177,8 @@ class Player(Character):
         return actual_healing > 0
 
     def use_potion(self) -> bool:
-        """Use one healing potion."""
+        """Use one potion from the persistent inventory."""
+
         if self.inventory["potion"] <= 0:
             print("You have no healing potions!")
             return False
@@ -174,10 +189,19 @@ class Player(Character):
 
         minimum_heal = 12 + (self.level * 2)
         maximum_heal = 20 + (self.level * 2)
-        heal_amount = random.randint(minimum_heal, maximum_heal)
+
+        heal_amount = random.randint(
+            minimum_heal,
+            maximum_heal,
+        )
 
         old_hp = self.hp
-        self.hp = min(self.max_hp, self.hp + heal_amount)
+
+        self.hp += heal_amount
+
+        if self.hp > self.max_hp:
+            self.hp = self.max_hp
+
         actual_healing = self.hp - old_hp
 
         self.inventory["potion"] -= 1
@@ -185,7 +209,11 @@ class Player(Character):
         print("\nYou used a healing potion!")
         print(f"You recovered {actual_healing:.1f} HP.")
         print(f"HP: {self.hp:.1f}/{self.max_hp}")
-        print(f"Potions remaining: {self.inventory['potion']}")
+
+        print(
+            f"Potions remaining: "
+            f"{self.inventory['potion']}"
+        )
 
         return True
 
@@ -193,5 +221,8 @@ class Player(Character):
         print("\n======================")
         print("       INVENTORY")
         print("======================")
-        print(f"Potion: {self.inventory['potion']}")
 
+        print(
+            f"Potion: "
+            f"{self.inventory['potion']}"
+        )
